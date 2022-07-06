@@ -1,0 +1,79 @@
+#kitchen-scene {
+    position: relative;
+    width: 1316px;
+    height: 623px;
+}
+
+#kitchen-bg {
+    position: absolute;
+}
+/* Counter */
+#counter {
+    position: absolute;
+    width: 175px;
+    top: 250px;
+    left: 350px;
+    z-index: 18;
+}
+
+#pos-counter {
+    position: absolute;
+    width: 175px;
+    top: 250px;
+    left: 700px;
+    z-index: 18;
+}
+
+#pos-computer {
+    position: absolute;
+    width: 95px;
+    top: 190px;
+    left: 735px;
+    z-index: 20;
+}
+/* Boxing Station */
+#boxing-counter-pc {
+    position: absolute;
+    width: 150px;
+    top: 120px;
+    left: 400px;
+    z-index: 10;
+}
+
+#boxing-counter-boxes {
+    position: absolute;
+    width: 140px;
+    top: 70px;
+    left: 520px;
+    z-index: 5;
+}
+
+#pizza-box {
+    position: absolute;
+    display: none;
+    width: 130px;
+    left: 400px;
+    top: 100px;
+    z-index: 10;
+}
+
+#boxing-computer {
+    position: absolute;
+    width: 75px;
+    top: 20px;
+    left: 550px;
+    z-index: 10;
+}
+
+#freezer {
+    position: absolute;
+    left: 1200px;
+    top: 90px;
+}
+
+#oven {
+    position: absolute;
+    width: 170px;
+    left: 900px;
+    top: 50px;
+}

@@ -5,14 +5,16 @@ import {Freezer} from './freezer.js'
 
 const MS_PER_TICK = 10
 
-const FOOTSTEPS_1 = './audio/sound-footsteps-2.wav'
-const FOOTSTEPS_2 = './audio/sound-footsteps-3.wav'
-const FOOTSTEPS_3 = './audio/sound-footsteps-4.wav'
+const FOOTSTEPS = [
+    './audio/sound-footsteps-2.wav',
+    './audio/sound-footsteps-3.wav',
+    './audio/sound-footsteps-4.wav',
+]
 
 let chefs = {
-    counterChef: new Chef(FOOTSTEPS_1, 'counter'),
-    logisticsChef: new Chef(FOOTSTEPS_2, 'logistics'),
-    cookingChef: new Chef(FOOTSTEPS_3, 'cooking'),
+    counterChef: new Chef(FOOTSTEPS[1], 'counter'),
+    logisticsChef: new Chef(FOOTSTEPS[2], 'logistics'),
+    cookingChef: new Chef(FOOTSTEPS[3], 'cooking'),
 }
 
 function Kitchen(MS_PER_TICK, chefs) {
@@ -21,66 +23,127 @@ function Kitchen(MS_PER_TICK, chefs) {
     this.visitors = 0
 
     this.entities = {}
-    this.entities.customers = {}
+    this.entities.customer = undefined
     this.entities.chefs = chefs
     this.currentOrder = undefined
 
-    this.customerImgs = {
-        hipster: './img/person-hipster.png',
-        oldMan: './img/person-old-man.png',
-        oldWoman: './img/person-old-woman.png',
-        student: './img/person-student.png',
-        dad: './img/person-dad.png',
+    this.locations = {
+        entrance: [20, 170],
+        counterCust: [260, 170],
+        boxingStationCust: [240, 70],
+        counterChef: [400, 175],
+        pos: [550, 175],
+        fridge: [1100, 175],
+        ovenLogistics: [900, 100],
+        ovenCooking: [800, 50],
+        boxingStationChef: [450, 50],
     }
 
     this.kitchenInfo = function () {
         console.log(this)
     }
 
+    // Create cust obj and page element if one isn't present.
     this.customerPresent = function () {
-        // Spawn customer if one isn't present.
+        if (this.entities.customer === undefined) {
+            let newCust = this.createCustomer()
+            this.createCustomerEl(newCust)
+        }
     }
 
     this.createCustomer = function () {
-        let newCustomer = document.createElement('img')
-        let randIndex = Math.floor(Math.random() * 5)
-        newCustomer.classList.add('customer')
-        newCustomer.setAttribute(
-            'src',
-            Object.values(this.customerImgs)[randIndex]
-        )
-        newCustomer.id = 'customer' + this.visitors
+        let customerId = this.visitors
+        let newCust = new Customer(FOOTSTEPS[Math.floor(Math.random() * 3)])
+        newCust.id = customerId
+        newCust.pageElementId = 'customer' + customerId
+        newCust.location = structuredClone(this.locations.entrance)
+        this.entities.customer = newCust
 
-        document.getElementById('people').append(newCustomer)
         this.visitors += 1
+        return newCust
+    }
+
+    this.createCustomerEl = function (customer) {
+        let newCustEl = document.createElement('img')
+        newCustEl.classList.add('customer')
+        newCustEl.setAttribute('src', customer.custImg)
+        newCustEl.id = customer.pageElementId
+
+        document.getElementById('people').append(newCustEl)
+        customer.initLocation()
     }
 
     this.customerOrder = function () {
-        // Customer moves and orders when at counter
+        let customer = this.entities.customer
+        let custAction = {}
+        if (!customer.ordered) {
+            if (customer.lastLocation !== this.locations.counterCust) {
+                custAction = {
+                    move: true,
+                    end: this.locations.counterCust,
+                    speed: 3,
+                }
+            } else {
+                custAction = {move: false, order: true}
+            }
+        } else {
+            if (!customer.hasPizza) {
+                if (
+                    customer.lastLocation === this.locations.boxingStationCust
+                ) {
+                    custAction = {move: false, pickUpPizza: true}
+                } else {
+                    custAction = {
+                        move: true,
+                        end: this.locations.boxingStationCust,
+                        speed: 3,
+                    }
+                }
+            } else {
+                custAction = {
+                    move: true,
+                    end: this.locations.entrance,
+                    speed: 3,
+                }
+            }
+        }
+
+        return custAction
     }
 
     this.handleOrder = function () {
-        // if currentOrder, check status.
+        let chefActions = []
+        // if (currentOrder) {
+        // check status
         // Set chefs into motion based on status.
+        // }
+        return chefActions
     }
 
-    this.moveEntities = function () {
-        // for entity in Kitchen.entities call their
-        // move function. Move function checks
-        // whether they need to move.
+    this.moveEntities = function (custAction, chefActions) {
+        if (custAction.move === true) {
+            this.entities.customer.move(custAction.end, custAction.speed)
+            console.log(this.locations.entrance)
+        } else if (custAction.order === true) {
+            this.entities.customer.order()
+        } else if (custAction.pickUpPizza === true) {
+            this.entities.customer.pickUpPizza()
+        } else {
+            console.error('Unexpected state of customer!')
+        }
     }
 
     this.tick = function () {
-        // customerPresent()
-        // customerOrder()
-        // handleOrder()
-        // moveEntities()
+        this.customerPresent()
+        let custAction = this.customerOrder()
+        let chefActions = this.handleOrder()
+        this.moveEntities(custAction, chefActions)
     }
 
-    this.loop = setInterval(this.tick, MS_PER_TICK)
+    this.loop = setInterval(() => {
+        this.tick(this)
+    }, MS_PER_TICK)
 }
 
 let myKitchen = new Kitchen(MS_PER_TICK, chefs)
 console.log(myKitchen.kitchenInfo())
-
-myKitchen.createCustomer()

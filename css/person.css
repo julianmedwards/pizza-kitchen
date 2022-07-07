@@ -1,27 +1,27 @@
 #counter-chef {
     position: absolute;
-    top: 175px;
     left: 400px;
+    top: 175px;
     z-index: 15;
 }
 
 #logistics-chef {
     position: absolute;
-    top: 175px;
     left: 1100px;
+    top: 175px;
     z-index: 15;
 }
 
 #cooking-chef {
     position: absolute;
     width: 220px;
-    top: 50px;
     left: 800px;
+    top: 50px;
     z-index: 15;
 }
 
 .customer {
     position: absolute;
     left: 20px;
-    bottom: 280px;
+    top: 170px;
 }

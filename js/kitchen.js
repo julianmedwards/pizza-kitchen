@@ -145,8 +145,8 @@ function Kitchen(MS_PER_TICK) {
                     let counterChef = this.entities.chefs.counterChef
                     if (counterChef.lastLocation === this.locations.pos) {
                         counterChefAction = {
-                            action: counterChef.enterOrder,
-                            actionArgs: [this.currentOrder],
+                            function: counterChef.enterOrder,
+                            args: [this.currentOrder],
                         }
                         // counterChef.enterOrder(this.currentOrder)
                     } else {

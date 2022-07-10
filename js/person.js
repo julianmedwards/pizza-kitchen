@@ -138,8 +138,10 @@ function Customer(footsteps, location) {
         customer.ordered = true
     }
     this.pickUpPizza = function (customer, kitchen) {
-        customer.hasPizza = true
-        kitchen.currentOrder.status = 'fulfilled'
+        if (kitchen.currentOrder === 'awaitingPickup') {
+            customer.hasPizza = true
+            kitchen.currentOrder.status = 'fulfilled'
+        }
     }
 }
 

@@ -95,37 +95,40 @@ function Kitchen(MS_PER_TICK) {
         customer.initLocation()
     }
 
-    this.customerOrder = function () {
+    this.determineCustActions = function () {
         let customer = this.entities.customer
         let custAction = {}
         if (!customer.ordered) {
             if (customer.lastLocation !== this.locations.counterCust) {
                 custAction = {
-                    move: true,
-                    end: this.locations.counterCust,
-                    speed: 3,
+                    function: customer.move,
+                    args: [customer, this.locations.counterCust, 3],
                 }
             } else {
-                custAction = {move: false, order: true}
+                custAction = {
+                    function: customer.order,
+                    args: [customer, this],
+                }
             }
         } else {
             if (!customer.hasPizza) {
                 if (
                     customer.lastLocation === this.locations.boxingStationCust
                 ) {
-                    custAction = {move: false, pickUpPizza: true}
+                    custAction = {
+                        function: customer.pickUpPizza,
+                        args: [customer, this],
+                    }
                 } else {
                     custAction = {
-                        move: true,
-                        end: this.locations.boxingStationCust,
-                        speed: 3,
+                        function: customer.move,
+                        args: [customer, this.locations.boxingStationCust, 3],
                     }
                 }
             } else {
                 custAction = {
-                    move: true,
-                    end: this.locations.entrance,
-                    speed: 3,
+                    function: customer.move,
+                    args: [customer, this.locations.entrance, 3],
                 }
             }
         }
@@ -133,7 +136,7 @@ function Kitchen(MS_PER_TICK) {
         return custAction
     }
 
-    this.handleOrder = function () {
+    this.determineChefActions = function () {
         let chefActions = []
         let counterChefAction = {}
         if (this.currentOrder) {
@@ -178,19 +181,7 @@ function Kitchen(MS_PER_TICK) {
     }
 
     this.moveEntities = function (custAction, chefActions) {
-        if (custAction.move === true) {
-            this.entities.customer.move(
-                this.entities.customer,
-                custAction.end,
-                custAction.speed
-            )
-        } else if (custAction.order === true) {
-            this.entities.customer.order(this)
-        } else if (custAction.pickUpPizza === true) {
-            this.entities.customer.pickUpPizza(this)
-        } else {
-            console.error('Unexpected state of customer!')
-        }
+        custAction.function(...custAction.args)
 
         for (let chefAction of chefActions) {
             chefAction.function(...chefAction.args)
@@ -199,8 +190,8 @@ function Kitchen(MS_PER_TICK) {
 
     this.tick = function () {
         this.customerPresent()
-        let custAction = this.customerOrder()
-        let chefActions = this.handleOrder()
+        let custAction = this.determineCustActions()
+        let chefActions = this.determineChefActions()
         this.moveEntities(custAction, chefActions)
     }
 

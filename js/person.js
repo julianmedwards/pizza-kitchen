@@ -80,9 +80,9 @@ function Chef(footsteps, job, location) {
     if (job === 'counter') {
         this.pageElementId = 'counter-chef'
 
-        this.enterOrder = function (order) {
+        this.enterOrder = function (chef, order) {
             order.status = 'submitted'
-            this.callOrder()
+            chef.callOrder()
         }
         this.callOrder = function () {
             console.log('Order up!')
@@ -91,20 +91,20 @@ function Chef(footsteps, job, location) {
         this.pageElementId = 'logistics-chef'
 
         this.openFridge = function (kitchen) {}
-        this.closeFridge = function (kitchen) {
-            this.turnable = false
+        this.closeFridge = function (chef, kitchen) {
+            chef.turnable = false
         }
-        this.putPizzaInOven = function (kitchen) {
-            this.turnable = true
+        this.putPizzaInOven = function (chef, kitchen) {
+            chef.turnable = true
         }
     } else if (job === 'cooking') {
         this.pageElementId = 'cooking-chef'
 
-        this.takeOutPizza = function (kitchen) {
-            this.turnable = false
+        this.takeOutPizza = function (chef, kitchen) {
+            chef.turnable = false
         }
-        this.boxPizza = function (kitchen) {
-            this.turnable = true
+        this.boxPizza = function (chef, kitchen) {
+            chef.turnable = true
         }
     } else {
         console.error('Unexpected chef job!')
@@ -130,15 +130,15 @@ function Customer(footsteps, location) {
 
     this.custImg = getRandImg(this)
 
-    this.order = function (kitchen) {
+    this.order = function (customer, kitchen) {
         kitchen.currentOrder = {
-            orderItem: this.orderItem,
+            orderItem: customer.orderItem,
             status: 'needsSubmission',
         }
-        this.ordered = true
+        customer.ordered = true
     }
-    this.pickUpPizza = function (kitchen) {
-        this.hasPizza = true
+    this.pickUpPizza = function (customer, kitchen) {
+        customer.hasPizza = true
         kitchen.currentOrder.status = 'fulfilled'
     }
 }

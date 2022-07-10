@@ -24,8 +24,8 @@ function Kitchen(MS_PER_TICK) {
         boxingStationCust: [280, 40],
         counterChef: [400, 175],
         pos: [550, 175],
-        fridge: [1100, 175],
-        ovenLogistics: [900, 100],
+        freezer: [1100, 175],
+        ovenLogistics: [950, 70],
         ovenCooking: [800, 50],
         boxingStationChef: [450, 50],
     }
@@ -41,7 +41,7 @@ function Kitchen(MS_PER_TICK) {
         logisticsChef: new Chef(
             FOOTSTEPS[2],
             'logistics',
-            structuredClone(this.locations.fridge)
+            structuredClone(this.locations.freezer)
         ),
         cookingChef: new Chef(
             FOOTSTEPS[3],
@@ -49,6 +49,7 @@ function Kitchen(MS_PER_TICK) {
             structuredClone(this.locations.ovenCooking)
         ),
     }
+    this.entities.freezer = new Freezer()
 
     this.kitchenInfo = function () {
         console.log(this)
@@ -130,6 +131,8 @@ function Kitchen(MS_PER_TICK) {
     this.determineChefActions = function () {
         let chefActions = []
         let counterChefAction = {}
+        let logisticsChefAction = []
+        let cookingChefAction = []
         if (this.currentOrder) {
             let counterChef = this.entities.chefs.counterChef
             let logisticsChef = this.entities.chefs.logisticsChef
@@ -158,6 +161,25 @@ function Kitchen(MS_PER_TICK) {
                             args: [counterChef, this.locations.counterChef, 3],
                         }
                         chefActions.push(counterChefAction)
+                    }
+                    if (logisticsChef.waiting == false) {
+                        if (!logisticsChef.hasFrozenPizza) {
+                            logisticsChefAction = {
+                                function: logisticsChef.getFrozenPizza,
+                                args: [logisticsChef, this],
+                            }
+                            chefActions.push(logisticsChefAction)
+                        } else {
+                            logisticsChefAction = {
+                                function: logisticsChef.move,
+                                args: [
+                                    logisticsChef,
+                                    this.locations.ovenLogistics,
+                                    3,
+                                ],
+                            }
+                            chefActions.push(logisticsChefAction)
+                        }
                     }
                     break
                 case 'cooking':

@@ -97,10 +97,25 @@ function Chef(footsteps, job, location) {
         }
     } else if (job === 'logistics') {
         this.pageElementId = 'logistics-chef'
+        this.hasFrozenPizza = false
+        this.waiting = false
 
-        this.openFridge = function (kitchen) {}
-        this.closeFridge = function (chef, kitchen) {
+        this.getFrozenPizza = function (chef, kitchen) {
+            console.log('getting pizzii')
+            kitchen.entities.freezer.open()
             chef.turnable = false
+            chef.waiting = true
+            setTimeout(() => {
+                console.log('1st timeout')
+                let element = document.getElementById(chef.pageElementId)
+                element.src = './img/pizza-man-frozen.gif'
+                chef.hasFrozenPizza = true
+                setTimeout(() => {
+                    console.log('2nd timeout')
+                    kitchen.entities.freezer.close()
+                    chef.waiting = false
+                }, 500)
+            }, 500)
         }
         this.putPizzaInOven = function (chef, kitchen) {
             chef.turnable = true

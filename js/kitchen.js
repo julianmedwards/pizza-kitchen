@@ -36,28 +36,19 @@ function Kitchen(MS_PER_TICK) {
         counterChef: new Chef(
             FOOTSTEPS[1],
             'counter',
-            this.locations.counterChef
+            structuredClone(this.locations.counterChef)
         ),
         logisticsChef: new Chef(
             FOOTSTEPS[2],
             'logistics',
-            this.locations.fridge
+            structuredClone(this.locations.fridge)
         ),
         cookingChef: new Chef(
             FOOTSTEPS[3],
             'cooking',
-            this.locations.ovenCooking
+            structuredClone(this.locations.ovenCooking)
         ),
     }
-
-    // this.initKitchen = function () {
-    //     this.entities.chefs.counterChef.initLocation()
-    //     this.entities.chefs.counterChef.location = this.locations.counterChef
-    //     this.entities.chefs.logisticsChef.initLocation()
-    //     this.entities.chefs.counterChef.location = this.locations.fridge
-    //     this.entities.chefs.cookingChef.initLocation()
-    //     this.entities.chefs.counterChef.location = this.locations.ovenCooking
-    // }
 
     this.kitchenInfo = function () {
         console.log(this)
@@ -140,31 +131,34 @@ function Kitchen(MS_PER_TICK) {
         let chefActions = []
         let counterChefAction = {}
         if (this.currentOrder) {
+            let counterChef = this.entities.chefs.counterChef
+            let logisticsChef = this.entities.chefs.logisticsChef
+            let cookingChef = this.entities.chefs.cookingChef
             switch (this.currentOrder.status) {
                 case 'needsSubmission':
-                    let counterChef = this.entities.chefs.counterChef
                     if (counterChef.lastLocation === this.locations.pos) {
                         counterChefAction = {
                             function: counterChef.enterOrder,
-                            args: [this.currentOrder],
+                            args: [counterChef, this.currentOrder],
                         }
-                        // counterChef.enterOrder(this.currentOrder)
                     } else {
                         counterChefAction = {
                             function: counterChef.move,
                             args: [counterChef, this.locations.pos, 3],
                         }
-                        // counterChefAction = {
-                        //     chef: counterChef,
-                        //     move: true,
-                        //     end: this.locations.pos,
-                        //     speed: 3,
-                        // }
                     }
                     chefActions.push(counterChefAction)
                     break
                 case 'submitted':
-                    this.entities.chefs.logisticsChef
+                    if (
+                        counterChef.lastLocation !== this.locations.counterChef
+                    ) {
+                        counterChefAction = {
+                            function: counterChef.move,
+                            args: [counterChef, this.locations.counterChef, 3],
+                        }
+                        chefActions.push(counterChefAction)
+                    }
                     break
                 case 'cooking':
                     this.entities.chefs.cookingChef

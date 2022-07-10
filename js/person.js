@@ -22,10 +22,12 @@ function Person(footsteps, location) {
     this.turnable = false
     this.turn = function (person) {
         let element = document.getElementById(person.pageElementId)
-        if (element.src === person.images.right) {
+        if (element.getAttribute('data-facing') === 'right') {
             element.src = person.images.left
+            element.setAttribute('data-facing', 'left')
         } else {
             element.src = person.images.right
+            element.setAttribute('data-facing', 'right')
         }
     }
 
@@ -42,13 +44,19 @@ function Person(footsteps, location) {
                     element.style.left.replace('px', '')
                 ))
                 if (xDiff < 0) {
-                    if (person.turnable) {
+                    if (
+                        person.turnable &&
+                        element.getAttribute('data-facing') === 'left'
+                    ) {
                         person.turn(person)
                     }
                     element.style.left = `${left + speed}px`
                     person.location[0] = left + speed
                 } else {
-                    if (person.turnable) {
+                    if (
+                        person.turnable &&
+                        element.getAttribute('data-facing') === 'right'
+                    ) {
                         person.turn(person)
                     }
                     element.style.left = `${left - speed}px`
@@ -67,8 +75,8 @@ function Person(footsteps, location) {
                 }
             }
         } else {
-            person.location = end
-            person.lastLocation = person.location
+            person.location = structuredClone(end)
+            person.lastLocation = end
         }
     }
 }
@@ -138,7 +146,7 @@ function Customer(footsteps, location) {
         customer.ordered = true
     }
     this.pickUpPizza = function (customer, kitchen) {
-        if (kitchen.currentOrder === 'awaitingPickup') {
+        if (kitchen.currentOrder.status === 'awaitingPickup') {
             customer.hasPizza = true
             kitchen.currentOrder.status = 'fulfilled'
         }

@@ -75,11 +75,10 @@ function Kitchen(MS_PER_TICK) {
         let customerId = this.visitors
         let newCust = new Customer(
             FOOTSTEPS[Math.floor(Math.random() * 3)],
-            this.locations.entrance
+            structuredClone(this.locations.entrance)
         )
         newCust.id = customerId
         newCust.pageElementId = 'customer' + customerId
-        // newCust.location = structuredClone(this.locations.entrance)
         this.entities.customer = newCust
 
         this.visitors += 1

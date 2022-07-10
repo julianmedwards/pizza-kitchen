@@ -91,13 +91,21 @@ function Chef(footsteps, job, location) {
         this.pageElementId = 'logistics-chef'
 
         this.openFridge = function (kitchen) {}
-        this.closeFridge = function (kitchen) {}
-        this.putPizzaInOven = function (kitchen) {}
+        this.closeFridge = function (kitchen) {
+            this.turnable = false
+        }
+        this.putPizzaInOven = function (kitchen) {
+            this.turnable = true
+        }
     } else if (job === 'cooking') {
         this.pageElementId = 'cooking-chef'
 
-        this.takeOutPizza = function (kitchen) {}
-        this.boxPizza = function (kitchen) {}
+        this.takeOutPizza = function (kitchen) {
+            this.turnable = false
+        }
+        this.boxPizza = function (kitchen) {
+            this.turnable = true
+        }
     } else {
         console.error('Unexpected chef job!')
     }

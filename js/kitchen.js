@@ -11,26 +11,17 @@ const FOOTSTEPS = [
     './audio/sound-footsteps-4.wav',
 ]
 
-let chefs = {
-    counterChef: new Chef(FOOTSTEPS[1], 'counter'),
-    logisticsChef: new Chef(FOOTSTEPS[2], 'logistics'),
-    cookingChef: new Chef(FOOTSTEPS[3], 'cooking'),
-}
-
-function Kitchen(MS_PER_TICK, chefs) {
+function Kitchen(MS_PER_TICK) {
     this.MS_PER_TICK = MS_PER_TICK
 
-    this.visitors = 0
-
-    this.entities = {}
-    this.entities.customer = undefined
-    this.entities.chefs = chefs
     this.currentOrder = undefined
+
+    this.visitors = 0
 
     this.locations = {
         entrance: [20, 170],
         counterCust: [260, 170],
-        boxingStationCust: [240, 70],
+        boxingStationCust: [280, 40],
         counterChef: [400, 175],
         pos: [550, 175],
         fridge: [1100, 175],
@@ -38,6 +29,35 @@ function Kitchen(MS_PER_TICK, chefs) {
         ovenCooking: [800, 50],
         boxingStationChef: [450, 50],
     }
+
+    this.entities = {}
+    this.entities.customer = undefined
+    this.entities.chefs = {
+        counterChef: new Chef(
+            FOOTSTEPS[1],
+            'counter',
+            this.locations.counterChef
+        ),
+        logisticsChef: new Chef(
+            FOOTSTEPS[2],
+            'logistics',
+            this.locations.fridge
+        ),
+        cookingChef: new Chef(
+            FOOTSTEPS[3],
+            'cooking',
+            this.locations.ovenCooking
+        ),
+    }
+
+    // this.initKitchen = function () {
+    //     this.entities.chefs.counterChef.initLocation()
+    //     this.entities.chefs.counterChef.location = this.locations.counterChef
+    //     this.entities.chefs.logisticsChef.initLocation()
+    //     this.entities.chefs.counterChef.location = this.locations.fridge
+    //     this.entities.chefs.cookingChef.initLocation()
+    //     this.entities.chefs.counterChef.location = this.locations.ovenCooking
+    // }
 
     this.kitchenInfo = function () {
         console.log(this)
@@ -53,10 +73,13 @@ function Kitchen(MS_PER_TICK, chefs) {
 
     this.createCustomer = function () {
         let customerId = this.visitors
-        let newCust = new Customer(FOOTSTEPS[Math.floor(Math.random() * 3)])
+        let newCust = new Customer(
+            FOOTSTEPS[Math.floor(Math.random() * 3)],
+            this.locations.entrance
+        )
         newCust.id = customerId
         newCust.pageElementId = 'customer' + customerId
-        newCust.location = structuredClone(this.locations.entrance)
+        // newCust.location = structuredClone(this.locations.entrance)
         this.entities.customer = newCust
 
         this.visitors += 1
@@ -113,23 +136,65 @@ function Kitchen(MS_PER_TICK, chefs) {
 
     this.handleOrder = function () {
         let chefActions = []
-        // if (currentOrder) {
-        // check status
-        // Set chefs into motion based on status.
-        // }
+        let counterChefAction = {}
+        if (this.currentOrder) {
+            switch (this.currentOrder.status) {
+                case 'needsSubmission':
+                    let counterChef = this.entities.chefs.counterChef
+                    if (counterChef.lastLocation === this.locations.pos) {
+                        counterChefAction = {
+                            action: counterChef.enterOrder,
+                            actionArgs: [this.currentOrder],
+                        }
+                        // counterChef.enterOrder(this.currentOrder)
+                    } else {
+                        counterChefAction = {
+                            function: counterChef.move,
+                            args: [counterChef, this.locations.pos, 3],
+                        }
+                        // counterChefAction = {
+                        //     chef: counterChef,
+                        //     move: true,
+                        //     end: this.locations.pos,
+                        //     speed: 3,
+                        // }
+                    }
+                    chefActions.push(counterChefAction)
+                    break
+                case 'submitted':
+                    this.entities.chefs.logisticsChef
+                    break
+                case 'cooking':
+                    this.entities.chefs.cookingChef
+                    break
+                case 'cooked':
+                    this.entities.chefs.cookingChef
+                    break
+                case 'awaitingPickup':
+                    this.entities.chefs.cookingChef
+                    break
+            }
+        }
         return chefActions
     }
 
     this.moveEntities = function (custAction, chefActions) {
         if (custAction.move === true) {
-            this.entities.customer.move(custAction.end, custAction.speed)
-            console.log(this.locations.entrance)
+            this.entities.customer.move(
+                this.entities.customer,
+                custAction.end,
+                custAction.speed
+            )
         } else if (custAction.order === true) {
-            this.entities.customer.order()
+            this.entities.customer.order(this)
         } else if (custAction.pickUpPizza === true) {
-            this.entities.customer.pickUpPizza()
+            this.entities.customer.pickUpPizza(this)
         } else {
             console.error('Unexpected state of customer!')
+        }
+
+        for (let chefAction of chefActions) {
+            chefAction.function(...chefAction.args)
         }
     }
 
@@ -145,5 +210,5 @@ function Kitchen(MS_PER_TICK, chefs) {
     }, MS_PER_TICK)
 }
 
-let myKitchen = new Kitchen(MS_PER_TICK, chefs)
+let myKitchen = new Kitchen(MS_PER_TICK)
 console.log(myKitchen.kitchenInfo())

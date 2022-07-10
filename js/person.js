@@ -1,17 +1,18 @@
 'use strict'
 
-function Person(footsteps) {
+function Person(footsteps, location) {
     this.walking = false
     this.footsteps = footsteps
     this.walk = function () {
         // play footsteps audio continuously
     }
     this.pageElementId = undefined
-    this.location = undefined
+    this.location = location
     this.lastLocation = undefined
 
     // Call after creating an instance and a corresponding element
-    // with pageElementId.
+    // with pageElementId. Sets top/left (coordinate) styles on el so
+    // move functions work.
     this.initLocation = function () {
         let element = document.getElementById(this.pageElementId)
         element.style.left = `${this.location[0]}px`
@@ -21,10 +22,10 @@ function Person(footsteps) {
     // Uses set coordinates on the page as "nodes" (start and end)
     // between which the function will attempt to move towards at a
     // given speed in pixels.
-    this.move = function (end, speed) {
-        let element = document.getElementById(this.pageElementId)
-        let xDiff = this.location[0] - end[0]
-        let yDiff = this.location[1] - end[1]
+    this.move = function (person, end, speed) {
+        let element = document.getElementById(person.pageElementId)
+        let xDiff = person.location[0] - end[0]
+        let yDiff = person.location[1] - end[1]
         if (Math.abs(xDiff) >= speed || Math.abs(yDiff) >= speed) {
             if (Math.abs(xDiff) > Math.abs(yDiff)) {
                 let left = (element.style.left = parseInt(
@@ -32,10 +33,10 @@ function Person(footsteps) {
                 ))
                 if (xDiff < 0) {
                     element.style.left = `${left + speed}px`
-                    this.location[0] = left + speed
+                    person.location[0] = left + speed
                 } else {
                     element.style.left = `${left - speed}px`
-                    this.location[0] = left - speed
+                    person.location[0] = left - speed
                 }
             } else {
                 let top = (element.style.top = parseInt(
@@ -43,46 +44,53 @@ function Person(footsteps) {
                 ))
                 if (yDiff < 0) {
                     element.style.top = `${top + speed}px`
-                    this.location[1] = top + speed
+                    person.location[1] = top + speed
                 } else {
                     element.style.top = `${top - speed}px`
-                    this.location[1] = top - speed
+                    person.location[1] = top - speed
                 }
             }
         } else {
-            this.location = end
-            this.lastLocation = this.location
+            person.location = end
+            person.lastLocation = person.location
         }
     }
 }
 
-function Chef(footsteps, job) {
-    Person.call(this, footsteps)
+function Chef(footsteps, job, location) {
+    Person.call(this, footsteps, location)
     this.job = job
     if (job === 'counter') {
         this.pageElementId = 'counter-chef'
 
-        this.callOrder = function () {}
-        this.enterOrder = function () {}
+        this.enterOrder = function (order) {
+            order.status = 'submitted'
+            this.callOrder()
+        }
+        this.callOrder = function () {
+            console.log('Order up!')
+        }
     } else if (job === 'logistics') {
         this.pageElementId = 'logistics-chef'
 
-        this.openFridge = function () {}
-        this.closeFridge = function () {}
-        this.putPizzaInOven = function () {}
+        this.openFridge = function (kitchen) {}
+        this.closeFridge = function (kitchen) {}
+        this.putPizzaInOven = function (kitchen) {}
     } else if (job === 'cooking') {
         this.pageElementId = 'cooking-chef'
 
-        this.takeOutPizza = function () {}
-        this.boxPizza = function () {}
+        this.takeOutPizza = function (kitchen) {}
+        this.boxPizza = function (kitchen) {}
     } else {
         console.error('Unexpected chef job!')
     }
+
+    this.initLocation()
 }
 
-function Customer(footsteps) {
-    Person.call(this, footsteps)
-    this.order = 'pizza'
+function Customer(footsteps, location) {
+    Person.call(this, footsteps, location)
+    this.orderItem = 'pizza'
     this.hasPizza = false
 
     let customerImgs = {
@@ -101,11 +109,16 @@ function Customer(footsteps) {
 
     this.custImg = getRandImg()
 
-    this.order = function () {
+    this.order = function (kitchen) {
+        kitchen.currentOrder = {
+            orderItem: this.orderItem,
+            status: 'needsSubmission',
+        }
         this.ordered = true
     }
-    this.pickUpPizza = function () {
+    this.pickUpPizza = function (kitchen) {
         this.hasPizza = true
+        kitchen.currentOrder.status = 'fulfilled'
     }
 }
 

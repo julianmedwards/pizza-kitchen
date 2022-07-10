@@ -19,6 +19,16 @@ function Person(footsteps, location) {
         element.style.top = `${this.location[1]}px`
     }
 
+    this.turnable = false
+    this.turn = function (person) {
+        let element = document.getElementById(person.pageElementId)
+        if (element.src === person.images.right) {
+            element.src = person.images.left
+        } else {
+            element.src = person.images.right
+        }
+    }
+
     // Uses set coordinates on the page as "nodes" (start and end)
     // between which the function will attempt to move towards at a
     // given speed in pixels.
@@ -32,9 +42,15 @@ function Person(footsteps, location) {
                     element.style.left.replace('px', '')
                 ))
                 if (xDiff < 0) {
+                    if (person.turnable) {
+                        person.turn(person)
+                    }
                     element.style.left = `${left + speed}px`
                     person.location[0] = left + speed
                 } else {
+                    if (person.turnable) {
+                        person.turn(person)
+                    }
                     element.style.left = `${left - speed}px`
                     person.location[0] = left - speed
                 }
@@ -59,6 +75,7 @@ function Person(footsteps, location) {
 
 function Chef(footsteps, job, location) {
     Person.call(this, footsteps, location)
+    this.turnable = true
     this.job = job
     if (job === 'counter') {
         this.pageElementId = 'counter-chef'
@@ -87,27 +104,23 @@ function Chef(footsteps, job, location) {
 
     this.initLocation()
 }
+Chef.prototype.images = {
+    left: './img/pizza-man-left.gif',
+    right: './img/pizza-man-right.gif',
+}
 
 function Customer(footsteps, location) {
     Person.call(this, footsteps, location)
     this.orderItem = 'pizza'
     this.hasPizza = false
 
-    let customerImgs = {
-        hipster: './img/person-hipster.png',
-        oldMan: './img/person-old-man.png',
-        oldWoman: './img/person-old-woman.png',
-        student: './img/person-student.png',
-        dad: './img/person-dad.png',
-    }
-
     // Select random customer image.
-    function getRandImg() {
+    function getRandImg(customer) {
         let randIndex = Math.floor(Math.random() * 5)
-        return [Object.values(customerImgs)[randIndex]]
+        return [Object.values(customer.images)[randIndex]]
     }
 
-    this.custImg = getRandImg()
+    this.custImg = getRandImg(this)
 
     this.order = function (kitchen) {
         kitchen.currentOrder = {
@@ -120,6 +133,14 @@ function Customer(footsteps, location) {
         this.hasPizza = true
         kitchen.currentOrder.status = 'fulfilled'
     }
+}
+
+Customer.prototype.images = {
+    hipster: './img/person-hipster.png',
+    oldMan: './img/person-old-man.png',
+    oldWoman: './img/person-old-woman.png',
+    student: './img/person-student.png',
+    dad: './img/person-dad.png',
 }
 
 export {Chef, Customer}

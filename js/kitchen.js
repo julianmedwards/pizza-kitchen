@@ -50,6 +50,7 @@ function Kitchen(MS_PER_TICK) {
         ),
     }
     this.entities.freezer = new Freezer()
+    this.entities.oven = new Oven()
 
     this.kitchenInfo = function () {
         console.log(this)
@@ -169,7 +170,10 @@ function Kitchen(MS_PER_TICK) {
                                 args: [logisticsChef, this],
                             }
                             chefActions.push(logisticsChefAction)
-                        } else {
+                        } else if (
+                            logisticsChef.lastLocation !==
+                            this.locations.ovenLogistics
+                        ) {
                             logisticsChefAction = {
                                 function: logisticsChef.move,
                                 args: [
@@ -179,17 +183,63 @@ function Kitchen(MS_PER_TICK) {
                                 ],
                             }
                             chefActions.push(logisticsChefAction)
+                        } else {
+                            logisticsChefAction = {
+                                function: logisticsChef.putPizzaInOven,
+                                args: [logisticsChef, this],
+                            }
+                            chefActions.push(logisticsChefAction)
                         }
                     }
                     break
                 case 'cooking':
-                    this.entities.chefs.cookingChef
+                    if (logisticsChef.lastLocation !== this.locations.freezer) {
+                        logisticsChefAction = {
+                            function: logisticsChef.move,
+                            args: [logisticsChef, this.locations.freezer, 3],
+                        }
+                        chefActions.push(logisticsChefAction)
+                    }
                     break
                 case 'cooked':
-                    this.entities.chefs.cookingChef
+                    if (!cookingChef.hasFrozenPizza) {
+                        cookingChefAction = {
+                            function: cookingChef.takeOutPizza,
+                            args: [cookingChef, this],
+                        }
+                        chefActions.push(cookingChefAction)
+                    } else if (
+                        cookingChef.lastLocation !==
+                        this.locations.boxingStationChef
+                    ) {
+                        cookingChefAction = {
+                            function: cookingChef.move,
+                            args: [
+                                cookingChef,
+                                this.locations.boxingStationChef,
+                                3,
+                            ],
+                        }
+                        chefActions.push(cookingChefAction)
+                    } else {
+                        cookingChefAction = {
+                            function: cookingChef.boxPizza,
+                            args: [cookingChef, this],
+                        }
+                        chefActions.push(cookingChefAction)
+                    }
                     break
-                case 'awaitingPickup':
-                    this.entities.chefs.cookingChef
+                case 'fulfilled':
+                    if (
+                        cookingChef.lastLocation ===
+                        this.locations.boxingStationChef
+                    ) {
+                        cookingChefAction = {
+                            function: cookingChef.move,
+                            args: [cookingChef, this.locations.ovenCooking, 3],
+                        }
+                        chefActions.push(cookingChefAction)
+                    }
                     break
             }
         }

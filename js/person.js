@@ -101,32 +101,44 @@ function Chef(footsteps, job, location) {
         this.waiting = false
 
         this.getFrozenPizza = function (chef, kitchen) {
-            console.log('getting pizzii')
-            kitchen.entities.freezer.open()
             chef.turnable = false
             chef.waiting = true
+
+            kitchen.entities.freezer.open()
+
             setTimeout(() => {
-                console.log('1st timeout')
                 let element = document.getElementById(chef.pageElementId)
                 element.src = './img/pizza-man-frozen.gif'
                 chef.hasFrozenPizza = true
+
                 setTimeout(() => {
-                    console.log('2nd timeout')
                     kitchen.entities.freezer.close()
                     chef.waiting = false
                 }, 500)
             }, 500)
         }
         this.putPizzaInOven = function (chef, kitchen) {
+            chef.turn(chef)
+            kitchen.entities.oven.cookPizza(kitchen)
+
+            chef.hasFrozenPizza = false
             chef.turnable = true
         }
     } else if (job === 'cooking') {
         this.pageElementId = 'cooking-chef'
+        this.hasFrozenPizza = false
 
         this.takeOutPizza = function (chef, kitchen) {
+            let element = document.getElementById(chef.pageElementId)
+            element.src = './img/pizza-man-frozen.gif'
             chef.turnable = false
+            chef.hasFrozenPizza = true
         }
         this.boxPizza = function (chef, kitchen) {
+            chef.turn(chef)
+            kitchen.currentOrder.status = 'awaitingPickup'
+
+            chef.hasFrozenPizza = false
             chef.turnable = true
         }
     } else {

@@ -5,10 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pizza Kitchen Animation</title>
-    <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/person.css" />
-    <link rel="stylesheet" href="css/freezer.css" />
-    <link rel="stylesheet" href="css/oven.css" />
     <link rel="stylesheet" href="css/kitchen.css" />
   </head>
   <body>
@@ -43,6 +40,28 @@
             data-facing="right"
           />
         </div>
+      </div>
+      <div id="audio">
+        <audio id="counter-chef-walk" src=""></audio>
+        <audio id="order-up" src="./audio/sound-order-up.wav"></audio>
+        <audio id="logistics-chef-walk" src=""></audio>
+        <audio id="cooking-chef-walk" src=""></audio>
+        <audio id="oven-close" src="./audio/sound-oven-1-close.wav"></audio>
+        <audio id="oven-open" src="./audio/sound-oven-1-open.wav"></audio>
+        <audio id="oven-bell" src="./audio/sound-kitchen-bell.wav"></audio>
+        <audio
+          id="freezer-close"
+          src="./audio/sound-fridge-2-close.wav"
+        ></audio>
+        <audio id="freezer-open" src="./audio/sound-fridge-2-open.wav"></audio>
+        <audio
+          id="counter-chef-keyboard"
+          src="./audio/sound-computer-keyboard.wav"
+        ></audio>
+        <audio
+          id="cooking-chef-keyboard"
+          src="./audio/sound-computer-keyboard.wav"
+        ></audio>
       </div>
     </div>
     <script src="js/freezer.js" type="module"></script>

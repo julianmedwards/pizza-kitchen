@@ -1,11 +1,27 @@
 'use strict'
 
 function Person(footsteps, location) {
+    this.waiting = false
     this.walking = false
     this.footsteps = footsteps
-    this.walk = function () {
-        // play footsteps audio continuously
+
+    this.playSound = function (soundEffect) {
+        let audio = document.getElementById(soundEffect)
+        audio.currentTime = 0
+        audio.play()
     }
+
+    this.walk = function (person) {
+        let audio = person.pageElementId + '-walk'
+        person.playSound(audio)
+        this.walking = true
+    }
+    this.stopWalk = function (person) {
+        let audio = document.getElementById(`${person.pageElementId}-walk`)
+        audio.pause()
+        this.walking = false
+    }
+
     this.pageElementId = undefined
     this.location = location
     this.lastLocation = undefined
@@ -17,6 +33,18 @@ function Person(footsteps, location) {
         let element = document.getElementById(this.pageElementId)
         element.style.left = `${this.location[0]}px`
         element.style.top = `${this.location[1]}px`
+    }
+
+    this.initAudio = function () {
+        if (document.getElementById(`${this.pageElementId}-walk`)) {
+            document.getElementById(`${this.pageElementId}-walk`).src =
+                this.footsteps
+        } else {
+            let audio = document.createElement('audio')
+            audio.setAttribute('id', `${this.pageElementId}-walk`)
+            audio.src = this.footsteps
+            document.getElementById('audio').append(audio)
+        }
     }
 
     this.turnable = false
@@ -35,6 +63,10 @@ function Person(footsteps, location) {
     // between which the function will attempt to move towards at a
     // given speed in pixels.
     this.move = function (person, end, speed) {
+        if (!person.walking) {
+            person.walk(person)
+        }
+
         let element = document.getElementById(person.pageElementId)
         let xDiff = person.location[0] - end[0]
         let yDiff = person.location[1] - end[1]
@@ -77,6 +109,7 @@ function Person(footsteps, location) {
         } else {
             person.location = structuredClone(end)
             person.lastLocation = end
+            person.stopWalk(person)
         }
     }
 }
@@ -87,18 +120,21 @@ function Chef(footsteps, job, location) {
     this.job = job
     if (job === 'counter') {
         this.pageElementId = 'counter-chef'
+        this.orderUpSFX = 'order-up'
+        this.keyboardSFX = this.pageElementId + '-keyboard'
 
         this.enterOrder = function (chef, order) {
             order.status = 'submitted'
-            chef.callOrder()
-        }
-        this.callOrder = function () {
-            console.log('Order up!')
+            chef.playSound(chef.keyboardSFX)
+            chef.waiting = true
+            setTimeout(() => {
+                chef.playSound(chef.orderUpSFX)
+                chef.waiting = false
+            }, 1000)
         }
     } else if (job === 'logistics') {
         this.pageElementId = 'logistics-chef'
         this.hasFrozenPizza = false
-        this.waiting = false
 
         this.getFrozenPizza = function (chef, kitchen) {
             chef.turnable = false
@@ -121,23 +157,41 @@ function Chef(footsteps, job, location) {
             chef.turn(chef)
             kitchen.entities.oven.cookPizza(kitchen)
 
+            chef.waiting = true
+            setTimeout(() => {
+                chef.waiting = false
+            }, 500)
+
             chef.hasFrozenPizza = false
             chef.turnable = true
         }
     } else if (job === 'cooking') {
         this.pageElementId = 'cooking-chef'
         this.hasFrozenPizza = false
+        this.keyboardSFX = this.pageElementId + '-keyboard'
 
         this.takeOutPizza = function (chef, kitchen) {
             let element = document.getElementById(chef.pageElementId)
             element.src = './img/pizza-man-frozen.gif'
             chef.turnable = false
             chef.hasFrozenPizza = true
+            kitchen.entities.oven.removePizza()
+
+            chef.waiting = true
+            setTimeout(() => {
+                chef.waiting = false
+            }, 500)
         }
         this.boxPizza = function (chef, kitchen) {
             chef.turn(chef)
-            kitchen.currentOrder.status = 'awaitingPickup'
+            chef.playSound(chef.keyboardSFX)
 
+            chef.waiting = true
+            setTimeout(() => {
+                chef.waiting = false
+            }, 1000)
+
+            kitchen.currentOrder.status = 'awaitingPickup'
             chef.hasFrozenPizza = false
             chef.turnable = true
         }
@@ -146,16 +200,18 @@ function Chef(footsteps, job, location) {
     }
 
     this.initLocation()
+    this.initAudio()
 }
 Chef.prototype.images = {
     left: './img/pizza-man-left.gif',
     right: './img/pizza-man-right.gif',
 }
 
-function Customer(footsteps, location) {
+function Customer(footsteps, location, id) {
     Person.call(this, footsteps, location)
     this.orderItem = 'pizza'
     this.hasPizza = false
+    this.pageElementId = 'customer' + id
 
     // Select random customer image.
     function getRandImg(customer) {
@@ -164,6 +220,15 @@ function Customer(footsteps, location) {
     }
 
     this.custImg = getRandImg(this)
+
+    this.createCustomerEl = function () {
+        let newCustEl = document.createElement('img')
+        newCustEl.classList.add('customer')
+        newCustEl.setAttribute('src', this.custImg)
+        newCustEl.id = this.pageElementId
+
+        document.getElementById('people').append(newCustEl)
+    }
 
     this.order = function (customer, kitchen) {
         kitchen.currentOrder = {
@@ -174,10 +239,23 @@ function Customer(footsteps, location) {
     }
     this.pickUpPizza = function (customer, kitchen) {
         if (kitchen.currentOrder.status === 'awaitingPickup') {
-            customer.hasPizza = true
-            kitchen.currentOrder.status = 'fulfilled'
+            customer.waiting = true
+            setTimeout(() => {
+                customer.hasPizza = true
+                kitchen.currentOrder.status = 'fulfilled'
+                customer.waiting = false
+            }, 500)
         }
     }
+    this.leave = function (customer, kitchen) {
+        let element = document.getElementById(customer.pageElementId)
+        element.remove()
+        kitchen.entities.customer = undefined
+    }
+
+    this.createCustomerEl()
+    this.initLocation()
+    this.initAudio()
 }
 
 Customer.prototype.images = {

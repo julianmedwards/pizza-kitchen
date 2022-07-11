@@ -34,17 +34,17 @@ function Kitchen(MS_PER_TICK) {
     this.entities.customer = undefined
     this.entities.chefs = {
         counterChef: new Chef(
-            FOOTSTEPS[1],
+            FOOTSTEPS[0],
             'counter',
             structuredClone(this.locations.counterChef)
         ),
         logisticsChef: new Chef(
-            FOOTSTEPS[2],
+            FOOTSTEPS[1],
             'logistics',
             structuredClone(this.locations.freezer)
         ),
         cookingChef: new Chef(
-            FOOTSTEPS[3],
+            FOOTSTEPS[2],
             'cooking',
             structuredClone(this.locations.ovenCooking)
         ),
@@ -59,8 +59,7 @@ function Kitchen(MS_PER_TICK) {
     // Create cust obj and page element if one isn't present.
     this.customerPresent = function () {
         if (this.entities.customer === undefined) {
-            let newCust = this.createCustomer()
-            this.createCustomerEl(newCust)
+            this.createCustomer()
         }
     }
 
@@ -68,65 +67,65 @@ function Kitchen(MS_PER_TICK) {
         let customerId = this.visitors
         let newCust = new Customer(
             FOOTSTEPS[Math.floor(Math.random() * 3)],
-            structuredClone(this.locations.entrance)
+            structuredClone(this.locations.entrance),
+            customerId
         )
         newCust.id = customerId
-        newCust.pageElementId = 'customer' + customerId
         this.entities.customer = newCust
 
         this.visitors += 1
-        return newCust
-    }
-
-    this.createCustomerEl = function (customer) {
-        let newCustEl = document.createElement('img')
-        newCustEl.classList.add('customer')
-        newCustEl.setAttribute('src', customer.custImg)
-        newCustEl.id = customer.pageElementId
-
-        document.getElementById('people').append(newCustEl)
-        customer.initLocation()
     }
 
     this.determineCustActions = function () {
         let customer = this.entities.customer
         let custAction = {}
-        if (!customer.ordered) {
-            if (customer.lastLocation !== this.locations.counterCust) {
-                custAction = {
-                    function: customer.move,
-                    args: [customer, this.locations.counterCust, 3],
+        if (!customer.waiting) {
+            if (!customer.ordered) {
+                if (customer.lastLocation !== this.locations.counterCust) {
+                    custAction = {
+                        function: customer.move,
+                        args: [customer, this.locations.counterCust, 3],
+                    }
+                } else {
+                    custAction = {
+                        function: customer.order,
+                        args: [customer, this],
+                    }
                 }
             } else {
-                custAction = {
-                    function: customer.order,
-                    args: [customer, this],
-                }
-            }
-        } else {
-            if (!customer.hasPizza) {
-                if (
-                    customer.lastLocation === this.locations.boxingStationCust
-                ) {
+                if (!customer.hasPizza) {
+                    if (
+                        customer.lastLocation ===
+                        this.locations.boxingStationCust
+                    ) {
+                        custAction = {
+                            function: customer.pickUpPizza,
+                            args: [customer, this],
+                        }
+                    } else {
+                        custAction = {
+                            function: customer.move,
+                            args: [
+                                customer,
+                                this.locations.boxingStationCust,
+                                3,
+                            ],
+                        }
+                    }
+                } else if (customer.lastLocation === this.locations.entrance) {
                     custAction = {
-                        function: customer.pickUpPizza,
+                        function: customer.leave,
                         args: [customer, this],
                     }
                 } else {
                     custAction = {
                         function: customer.move,
-                        args: [customer, this.locations.boxingStationCust, 3],
+                        args: [customer, this.locations.entrance, 3],
                     }
                 }
-            } else {
-                custAction = {
-                    function: customer.move,
-                    args: [customer, this.locations.entrance, 3],
-                }
             }
+            return custAction
         }
-
-        return custAction
     }
 
     this.determineChefActions = function () {
@@ -140,105 +139,133 @@ function Kitchen(MS_PER_TICK) {
             let cookingChef = this.entities.chefs.cookingChef
             switch (this.currentOrder.status) {
                 case 'needsSubmission':
-                    if (counterChef.lastLocation === this.locations.pos) {
-                        counterChefAction = {
-                            function: counterChef.enterOrder,
-                            args: [counterChef, this.currentOrder],
-                        }
-                    } else {
-                        counterChefAction = {
-                            function: counterChef.move,
-                            args: [counterChef, this.locations.pos, 3],
-                        }
-                    }
-                    chefActions.push(counterChefAction)
-                    break
-                case 'submitted':
-                    if (
-                        counterChef.lastLocation !== this.locations.counterChef
-                    ) {
-                        counterChefAction = {
-                            function: counterChef.move,
-                            args: [counterChef, this.locations.counterChef, 3],
+                    if (!counterChef.waiting) {
+                        if (counterChef.lastLocation === this.locations.pos) {
+                            counterChefAction = {
+                                function: counterChef.enterOrder,
+                                args: [counterChef, this.currentOrder],
+                            }
+                        } else {
+                            counterChefAction = {
+                                function: counterChef.move,
+                                args: [counterChef, this.locations.pos, 3],
+                            }
                         }
                         chefActions.push(counterChefAction)
                     }
-                    if (logisticsChef.waiting == false) {
-                        if (!logisticsChef.hasFrozenPizza) {
-                            logisticsChefAction = {
-                                function: logisticsChef.getFrozenPizza,
-                                args: [logisticsChef, this],
+                    break
+                case 'submitted':
+                    if (!counterChef.waiting) {
+                        if (
+                            counterChef.lastLocation !==
+                            this.locations.counterChef
+                        ) {
+                            counterChefAction = {
+                                function: counterChef.move,
+                                args: [
+                                    counterChef,
+                                    this.locations.counterChef,
+                                    3,
+                                ],
                             }
-                            chefActions.push(logisticsChefAction)
-                        } else if (
+                            chefActions.push(counterChefAction)
+                        }
+                    }
+                    if (!logisticsChef.waiting) {
+                        if (logisticsChef.waiting == false) {
+                            if (!logisticsChef.hasFrozenPizza) {
+                                logisticsChefAction = {
+                                    function: logisticsChef.getFrozenPizza,
+                                    args: [logisticsChef, this],
+                                }
+                                chefActions.push(logisticsChefAction)
+                            } else if (
+                                logisticsChef.lastLocation !==
+                                this.locations.ovenLogistics
+                            ) {
+                                logisticsChefAction = {
+                                    function: logisticsChef.move,
+                                    args: [
+                                        logisticsChef,
+                                        this.locations.ovenLogistics,
+                                        3,
+                                    ],
+                                }
+                                chefActions.push(logisticsChefAction)
+                            } else {
+                                logisticsChefAction = {
+                                    function: logisticsChef.putPizzaInOven,
+                                    args: [logisticsChef, this],
+                                }
+                                chefActions.push(logisticsChefAction)
+                            }
+                        }
+                    }
+                    break
+                case 'cooking':
+                    if (!logisticsChef.waiting) {
+                        if (
                             logisticsChef.lastLocation !==
-                            this.locations.ovenLogistics
+                            this.locations.freezer
                         ) {
                             logisticsChefAction = {
                                 function: logisticsChef.move,
                                 args: [
                                     logisticsChef,
-                                    this.locations.ovenLogistics,
+                                    this.locations.freezer,
                                     3,
                                 ],
                             }
                             chefActions.push(logisticsChefAction)
-                        } else {
-                            logisticsChefAction = {
-                                function: logisticsChef.putPizzaInOven,
-                                args: [logisticsChef, this],
-                            }
-                            chefActions.push(logisticsChefAction)
                         }
-                    }
-                    break
-                case 'cooking':
-                    if (logisticsChef.lastLocation !== this.locations.freezer) {
-                        logisticsChefAction = {
-                            function: logisticsChef.move,
-                            args: [logisticsChef, this.locations.freezer, 3],
-                        }
-                        chefActions.push(logisticsChefAction)
                     }
                     break
                 case 'cooked':
-                    if (!cookingChef.hasFrozenPizza) {
-                        cookingChefAction = {
-                            function: cookingChef.takeOutPizza,
-                            args: [cookingChef, this],
+                    if (!cookingChef.waiting) {
+                        if (!cookingChef.hasFrozenPizza) {
+                            cookingChefAction = {
+                                function: cookingChef.takeOutPizza,
+                                args: [cookingChef, this],
+                            }
+                            chefActions.push(cookingChefAction)
+                        } else if (
+                            cookingChef.lastLocation !==
+                            this.locations.boxingStationChef
+                        ) {
+                            cookingChefAction = {
+                                function: cookingChef.move,
+                                args: [
+                                    cookingChef,
+                                    this.locations.boxingStationChef,
+                                    3,
+                                ],
+                            }
+                            chefActions.push(cookingChefAction)
+                        } else {
+                            cookingChefAction = {
+                                function: cookingChef.boxPizza,
+                                args: [cookingChef, this],
+                            }
+                            chefActions.push(cookingChefAction)
                         }
-                        chefActions.push(cookingChefAction)
-                    } else if (
-                        cookingChef.lastLocation !==
-                        this.locations.boxingStationChef
-                    ) {
-                        cookingChefAction = {
-                            function: cookingChef.move,
-                            args: [
-                                cookingChef,
-                                this.locations.boxingStationChef,
-                                3,
-                            ],
-                        }
-                        chefActions.push(cookingChefAction)
-                    } else {
-                        cookingChefAction = {
-                            function: cookingChef.boxPizza,
-                            args: [cookingChef, this],
-                        }
-                        chefActions.push(cookingChefAction)
                     }
                     break
                 case 'fulfilled':
-                    if (
-                        cookingChef.lastLocation ===
-                        this.locations.boxingStationChef
-                    ) {
-                        cookingChefAction = {
-                            function: cookingChef.move,
-                            args: [cookingChef, this.locations.ovenCooking, 3],
+                    if (!cookingChef.waiting) {
+                        if (
+                            cookingChef.lastLocation ===
+                            this.locations.boxingStationChef
+                        ) {
+                            cookingChefAction = {
+                                function: cookingChef.move,
+                                args: [
+                                    cookingChef,
+                                    this.locations.ovenCooking,
+                                    3,
+                                ],
+                            }
+                            chefActions.push(cookingChefAction)
                         }
-                        chefActions.push(cookingChefAction)
                     }
                     break
             }
@@ -247,7 +274,9 @@ function Kitchen(MS_PER_TICK) {
     }
 
     this.moveEntities = function (custAction, chefActions) {
-        custAction.function(...custAction.args)
+        if (custAction) {
+            custAction.function(...custAction.args)
+        }
 
         for (let chefAction of chefActions) {
             chefAction.function(...chefAction.args)

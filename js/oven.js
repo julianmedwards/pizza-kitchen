@@ -3,9 +3,14 @@
 function Oven() {
     this.pageElementId = 'oven'
     this.cooking = false
+    this.bellSFX = this.pageElementId + '-bell'
+    this.openSFX = this.pageElementId + '-open'
+    this.closeSFX = this.pageElementId + '-close'
 
-    this.ding = function () {
-        console.log('Ding!')
+    this.playSound = function (soundEffect) {
+        let audio = document.getElementById(soundEffect)
+        audio.currentTime = 0
+        audio.play()
     }
 
     this.cookPizza = function (kitchen) {
@@ -13,15 +18,17 @@ function Oven() {
         element.setAttribute('src', './img/oven-closed.png')
         this.cooking = true
         kitchen.currentOrder.status = 'cooking'
+        this.playSound(this.closeSFX)
         setTimeout(() => {
-            this.ding()
+            this.playSound(this.bellSFX)
             this.cooking = false
             kitchen.currentOrder.status = 'cooked'
-        }, 1000)
+        }, 2000)
     }
-    this.takeOutPizza = function () {
+    this.removePizza = function () {
         let element = document.getElementById(this.pageElementId)
         element.setAttribute('src', './img/oven-open.png')
+        this.playSound(this.openSFX)
     }
 }
 

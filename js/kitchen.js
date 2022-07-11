@@ -297,6 +297,10 @@ function Kitchen(MS_PER_TICK) {
 
 function startAnimation() {
     this.style.display = 'none'
+    let bgm = document.getElementById('bgm')
+    bgm.loop = true
+    bgm.volume = 0.3
+    bgm.play()
     let myKitchen = new Kitchen(MS_PER_TICK)
     console.log(myKitchen.kitchenInfo())
 }

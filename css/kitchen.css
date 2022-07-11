@@ -1,3 +1,13 @@
+#play-btn {
+    position: absolute;
+    font-family: arial;
+    z-index: 100;
+    width: 150px;
+    height: 50px;
+    top: 200px;
+    left: 150px;
+}
+
 body {
     margin: 0;
 }
@@ -73,6 +83,15 @@ body {
     position: absolute;
     left: 1200px;
     top: 90px;
+}
+
+#freezer-pizza {
+    position: absolute;
+    display: none;
+    width: 80px;
+    left: 1205px;
+    top: 160px;
+    z-index: 10;
 }
 
 #oven {

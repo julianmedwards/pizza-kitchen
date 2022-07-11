@@ -124,10 +124,10 @@ function Chef(footsteps, job, location) {
         this.keyboardSFX = this.pageElementId + '-keyboard'
 
         this.enterOrder = function (chef, order) {
-            order.status = 'submitted'
             chef.playSound(chef.keyboardSFX)
             chef.waiting = true
             setTimeout(() => {
+                order.status = 'submitted'
                 chef.playSound(chef.orderUpSFX)
                 chef.waiting = false
             }, 1000)
@@ -146,6 +146,7 @@ function Chef(footsteps, job, location) {
                 let element = document.getElementById(chef.pageElementId)
                 element.src = './img/pizza-man-frozen.gif'
                 chef.hasFrozenPizza = true
+                kitchen.entities.freezer.hidePizza()
 
                 setTimeout(() => {
                     kitchen.entities.freezer.close()
@@ -185,6 +186,8 @@ function Chef(footsteps, job, location) {
         this.boxPizza = function (chef, kitchen) {
             chef.turn(chef)
             chef.playSound(chef.keyboardSFX)
+
+            document.getElementById('pizza-box').style.display = 'initial'
 
             chef.waiting = true
             setTimeout(() => {
@@ -231,16 +234,22 @@ function Customer(footsteps, location, id) {
     }
 
     this.order = function (customer, kitchen) {
-        kitchen.currentOrder = {
-            orderItem: customer.orderItem,
-            status: 'needsSubmission',
-        }
-        customer.ordered = true
+        customer.waiting = true
+        setTimeout(() => {
+            kitchen.currentOrder = {
+                orderItem: customer.orderItem,
+                status: 'needsSubmission',
+            }
+            customer.ordered = true
+            customer.waiting = false
+        }, 1000)
     }
     this.pickUpPizza = function (customer, kitchen) {
         if (kitchen.currentOrder.status === 'awaitingPickup') {
             customer.waiting = true
             setTimeout(() => {
+                document.getElementById('pizza-box').style.display = 'none'
+
                 customer.hasPizza = true
                 kitchen.currentOrder.status = 'fulfilled'
                 customer.waiting = false

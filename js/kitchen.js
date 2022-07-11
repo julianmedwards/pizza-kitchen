@@ -295,5 +295,11 @@ function Kitchen(MS_PER_TICK) {
     }, MS_PER_TICK)
 }
 
-let myKitchen = new Kitchen(MS_PER_TICK)
-console.log(myKitchen.kitchenInfo())
+function startAnimation() {
+    this.style.display = 'none'
+    let myKitchen = new Kitchen(MS_PER_TICK)
+    console.log(myKitchen.kitchenInfo())
+}
+
+let playBtn = document.getElementById('play-btn')
+playBtn.addEventListener('click', startAnimation)
